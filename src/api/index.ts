@@ -14,6 +14,14 @@ const apiClient = axios.create({
   timeout: 120000,
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const registerUser = async (userData: RegisterUserData) => {
   try {
     const response = await apiClient.post("/auth/register", userData);
@@ -51,12 +59,19 @@ export const updateDepartment = async (
   updates: Partial<Department>
 ) => {
   try {
+    console.log("Sending update request with:", { departmentId, updates });
     const response = await apiClient.put(
-      `/departments/${departmentId}`,
-      updates
+      `/department/departments/${departmentId}`,
+      updates,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error: any) {
+    console.error("Update department error:", error);
     throw error.response?.data || error.message;
   }
 };
@@ -92,19 +107,25 @@ export const assignEmployeesToDepartment = async (
 // Delete a department
 export const deleteDepartment = async (departmentId: string) => {
   try {
+    console.log("Sending delete request for ID:", departmentId); // Debug log
     const response = await apiClient.delete(
-      `/department/departments/${departmentId}`
+      `/department/departments/${departmentId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error: any) {
+    console.error("Delete department error:", error); // Debug log
     throw error.response?.data || error.message;
   }
 };
-
 export const fetchEmployeeProfile = async (): Promise<IUser> => {
   try {
     const response = await apiClient.get("/employee/profile");
-    return response.data.data; // Adjust based on your API response structure
+    return response.data.data;
   } catch (error: any) {
     console.error("Error fetching employee profile:", error);
     throw new Error(error.response?.data?.message || "Failed to fetch profile");
@@ -115,7 +136,7 @@ export const fetchEmployeeDepartment =
   async (): Promise<IDepartment | null> => {
     try {
       const response = await apiClient.get("/employee/department");
-      return response.data.data; // Adjust based on your API response structure
+      return response.data.data;
     } catch (error: any) {
       console.error("Error fetching employee department:", error);
       throw new Error(
@@ -127,7 +148,7 @@ export const fetchEmployeeDepartment =
 export const fetchITEmployeesLocationA = async (): Promise<IUser[]> => {
   try {
     const response = await apiClient.get("/query/it-employees-location-a");
-    return response.data.data; // Adjust based on your API response structure
+    return response.data.data;
   } catch (error: any) {
     console.error("Error fetching IT employees in location A:", error);
     throw new Error(
@@ -139,7 +160,7 @@ export const fetchITEmployeesLocationA = async (): Promise<IUser[]> => {
 export const fetchSalesEmployeesSorted = async (): Promise<IUser[]> => {
   try {
     const response = await apiClient.get("/query/sales-employees-sorted");
-    return response.data.data; // Adjust based on your API response structure
+    return response.data.data;
   } catch (error: any) {
     console.error("Error fetching sorted Sales employees:", error);
     throw new Error(
